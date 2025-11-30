@@ -126,6 +126,8 @@ WORKFLOWS:
 - **MORNING ROUTINE:** `generate_morning_briefing`.
 """
 
+        self.base_system_instruction = system_instruction
+
         self.model = genai.GenerativeModel(
             model_name=settings.GEMINI_MODEL,
             safety_settings=safety_settings,
@@ -237,36 +239,30 @@ WORKFLOWS:
             return f"Failed to generate briefing: {e}"
 
     async def process_message(self, message: str, sender: str, media_url: str = None, media_type: str = None):
+        assistant_name = self._get_system_config()
+
         # 1. Session Init
         if sender not in self.sessions:
             logger.info(f"🆕 Starting new session for {sender}")
-            
-            # Load Context
-            user_profile = self._load_user_profile()
-            assistant_name = self._get_system_config()
-            
-            identity_context = f"Assistant Name: {assistant_name if assistant_name else 'NOT SET (Ask User)'}"
-            
+
+            if not assistant_name:
+                intro_msg = (
+                    "CONTEXT: You are a brand new AI Assistant. You have NO NAME.\n"
+                    "TASKS:\n"
+                    "1. Detect the user's language (English, Spanish, French or other).\n"
+                    "2. Greet the user in that language.\n"
+                    "3. Ask the user to assign you a name.\n"
+                    "Do NOT perform any other actions or mention projects/finances yet."
+                )
+            else:
+                intro_msg = (
+                    f"CONTEXT: You are {assistant_name}, the user's Chief of Staff.\n"
+                    "Follow the full operating protocols, manage Finance/Projects/Goals/Knowledge, and remain proactive."
+                )
+
             history = [
-                {
-                    "role": "user",
-                    "parts": [f"""
-SYSTEM CONTEXT:
-{identity_context}
-
-USER PROFILE:
-{user_profile}
-
-INSTRUCTION:
-If 'Assistant Name' is NOT SET, ask for it.
-If 'User Profile' is NOT FOUND, ask for it.
-Otherwise, operate normally.
-                    """]
-                },
-                {
-                    "role": "model",
-                    "parts": ["Understood. I will check my identity and user profile before proceeding."]
-                }
+                {"role": "user", "parts": [intro_msg]},
+                {"role": "model", "parts": ["Understood. I will adapt to this state."]}
             ]
             self.sessions[sender] = self.model.start_chat(history=history)
         
@@ -310,6 +306,7 @@ Otherwise, operate normally.
         try:
             while True:
                 candidate = response.candidates[0]
+                logger.info(f"🔍 Raw Candidate: {candidate}")
                 function_call_part = None
                 for part in candidate.content.parts:
                     if part.function_call:

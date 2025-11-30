@@ -341,7 +341,7 @@ WORKFLOWS:
                     )
                 )
 
-            # 5. Safe Text Extraction
+            # 5. SAFE TEXT EXTRACTION & FORCED REPLY
             final_text_parts = []
             for part in response.candidates[0].content.parts:
                 if part.text:
@@ -350,7 +350,11 @@ WORKFLOWS:
             final_response = "".join(final_text_parts).strip()
             
             if not final_response:
-                return "✅ Tarea completada (Sin respuesta de texto)."
+                logger.info("⚠️ Response empty after tools. Forcing a text reply...")
+                fallback_response = chat.send_message(
+                    "System Note: Tool execution successful. Now confirm this to the user in their language. Be brief."
+                )
+                return fallback_response.text
                 
             return final_response
 

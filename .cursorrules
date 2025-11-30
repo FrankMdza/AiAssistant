@@ -1,0 +1,50 @@
+# .cursorrules - Holistic Life Orchestrator (Kaggle Hackathon)
+
+## 🧠 Project Context
+You are an expert Python Backend Developer and AI Architect assisting in a high-speed Hackathon project (deadline: Dec 1st). 
+We are building "Holistic Life Orchestrator", a Multi-Agent System (MAS) acting as a "Life Concierge".
+- **Input:** WhatsApp (Voice & Text via Twilio Sandbox).
+- **Brain:** Google Gemini 1.5 Flash.
+- **Memory/UI:** Local Markdown files (.md) synced with Obsidian.
+- **Goal:** Privacy-first, low-latency, strictly defined "Concierge" track.
+
+## 🛠️ Tech Stack (Strict)
+- **Language:** Python 3.10+
+- **Web Framework:** FastAPI (Async is mandatory).
+- **LLM SDK:** `google-generativeai` (Gemini API).
+- **Config:** `pydantic-settings` (Strict ENV management).
+- **Development:** `uvicorn` for server, `ngrok` for tunneling.
+- **NO Databases:** Do NOT suggest SQL, Mongo, or Vector DBs. We use the file system (Markdown) as the database.
+
+## ⚡ Coding Principles (Hackathon Mode)
+1.  **MVP First:** Prioritize code that works NOW over perfect abstraction.
+2.  **KISS (Keep It Simple, Stupid):** Avoid complex class hierarchies. Use functional composition where possible.
+3.  **Fail Fast:** Use Pydantic for validation. If inputs are wrong, crash early and visibly in logs.
+4.  **Obsidian Native:** Logic must respect Markdown syntax (tables, checklists `-[ ]`, wikilinks `[[Link]]`).
+
+## 📂 File Structure & Architecture
+- `main.py`: Entry point, FastAPI app, and Twilio Webhook endpoint.
+- `config.py`: Pydantic settings.
+- `/agents`: Folder containing logic for specific agents.
+  - `orchestrator.py`: Router. Decides intent based on user input.
+  - `finance.py`: Manages expenses, income, and budget CSVs.
+  - `tasks.py`: Manages daily execution and simple To-Dos.
+  - `projects.py`: **The PM.** Handles multi-step projects, sprints, and milestones.
+  - `goals.py`: **The Coach.** Handles long-term vision (Yearly/5-Year goals).
+  - `knowledge.py`: **The Librarian.** Summarizes info, handles tagging, and ensures cross-linking (RAG functionality).
+- `/vault`: Local directory simulating the Obsidian Vault.
+  - `/vault/Inbox`: Default entry point.
+  - `/vault/Finance`: Financial logs.
+  - `/vault/Projects`: One folder per project.
+  - `/vault/Goals`: Vision boards/docs.
+
+## 📝 Obsidian/Markdown Standards
+- **Links:** Use Wikilinks `[[Project Alpha]]` to connect concepts.
+- **Tags:** Use `#hashtags` for quick filtering (e.g., `#urgent`, `#waiting`).
+- **Frontmatter:** Use YAML frontmatter for metadata at the top of files:
+  ```yaml
+  ---
+  type: task
+  status: active
+  created: 2025-11-26
+  ---   

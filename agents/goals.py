@@ -67,10 +67,26 @@ class GoalsAgent:
             else:
                 comment = "Keep pushing."
 
-            row = f"| {date_str} | {habit} | {status} | {comment} |\n"
-            
-            with open(self.tracker_file, "a", encoding="utf-8") as f:
-                f.write(row)
+            new_row = f"| {date_str} | {habit} | {status} | {comment} |"
+
+            lines = content.splitlines()
+            updated = False
+
+            for idx, line in enumerate(lines):
+                if not line.startswith("|") or line.startswith("| :---") or "Date" in line:
+                    continue
+                parts = [p.strip() for p in line.split("|") if p.strip()]
+                if len(parts) >= 4 and parts[0] == date_str and parts[1] == habit:
+                    lines[idx] = new_row
+                    updated = True
+                    break
+
+            if not updated:
+                if lines and lines[-1].strip() != "":
+                    lines.append("")
+                lines.append(new_row)
+
+            self.tracker_file.write_text("\n".join(lines).strip() + "\n", encoding="utf-8")
                 
             return f"Habit '{habit}' logged as {status}. {comment}"
         

@@ -46,9 +46,13 @@ class ProjectsAgent:
             entry = f"- [ ] {task}"
             if tag:
                 entry += f" #{tag}"
+
+            newline_prefix = "\n"
+            if not self.inbox_path.exists() or self.inbox_path.read_text(encoding="utf-8").strip() == "":
+                newline_prefix = ""
             
             with open(self.inbox_path, "a", encoding="utf-8") as f:
-                f.write(f"{entry}\n")
+                f.write(f"{newline_prefix}{entry}\n")
             return "Task added to Inbox. 📥"
         except Exception as e:
             logger.error(f"Error adding to inbox: {e}")
@@ -189,8 +193,9 @@ objective: {objective}
             
             # 3. Execute (Append to Inbox)
             header = f"\n### 📅 Sprint: {project_name} ({datetime.now().strftime('%Y-%m-%d')})\n"
+            separator = "\n---\n"
             with open(self.inbox_path, "a", encoding="utf-8") as f:
-                f.write(header + sprint_tasks + "\n")
+                f.write(f"{separator}{header}{sprint_tasks}\n")
                 
             return f"Weekly sprint for '{project_name}' has been planned and added to your Inbox. 📅"
 

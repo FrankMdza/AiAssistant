@@ -134,6 +134,11 @@ WORKFLOWS:
             system_instruction=system_instruction,
             tools=list(self.available_tools.values())
         )
+        # Utility model for cleaning structured files
+        self.profile_model = genai.GenerativeModel(
+            model_name=settings.GEMINI_MODEL,
+            system_instruction="You maintain a concise, well-structured user profile."
+        )
         
         self.sessions = {}
 
@@ -179,22 +184,57 @@ WORKFLOWS:
 
     def remember_fact(self, fact: str):
         """
-        Appends a fact to the User Profile.
-        Use this tool when the user tells you a permanent preference or fact.
+        Maintains a smart, structured User Profile by merging new facts.
         """
         try:
             profile_path = Path("vault/Internal/UserProfile.md")
             profile_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            if not profile_path.exists():
-                profile_path.write_text("# User Profile & Core Memory\n", encoding="utf-8")
-                
-            with open(profile_path, "a", encoding="utf-8") as f:
-                f.write(f"\n- {fact}")
+
+            existing_profile = ""
+            if profile_path.exists():
+                existing_profile = profile_path.read_text(encoding="utf-8")
+            else:
+                existing_profile = """# User Profile & Core Memory
+
+## Identity
+- 
+
+## Goals
+- 
+
+## Preferences
+- 
+"""
+
+            prompt = f"""
+Current Profile:
+{existing_profile}
+
+New Fact: "{fact}"
+
+TASK: Merge this new fact into the profile. Return UPDATED markdown grouped as:
+## Identity
+- ...
+## Goals
+- ...
+## Preferences
+- ...
+Keep it concise and bullet-based.
+"""
+            response = self.profile_model.generate_content(prompt)
+            cleaned_profile = response.text.strip() if response and response.text else ""
+
+            if not cleaned_profile:
+                cleaned_profile = existing_profile + f"\n- {fact}"
+
+            profile_path.write_text(cleaned_profile.strip() + "\n", encoding="utf-8")
             return "Memory updated."
         except Exception as e:
             logger.error(f"Error updating user profile: {e}")
-            return "Failed to update memory."
+            # Basic fallback append
+            with open(profile_path, "a", encoding="utf-8") as f:
+                f.write(f"\n- {fact}")
+            return "Memory updated (fallback)."
 
     def read_any_vault_file(self, path_fragment: str) -> str:
         """

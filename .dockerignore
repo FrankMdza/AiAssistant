@@ -1,0 +1,38 @@
+# Git & Config
+.git/
+.gitignore
+.cursorrules
+.dockerignore
+Dockerfile
+README.md
+
+# Environment & Secrets
+.env
+.env.example
+venv/
+.venv/
+
+# Data (Vault)
+vault/
+*.md
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+.DS_Store
+
